@@ -1,961 +1,594 @@
-<!doctype html>
-<html lang="zh-TW">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台北旅遊助手</title>
-  <script src="/_sdk/element_sdk.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>台北吉伊卡哇大冒險</title>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Chiikawa Palette */
+            --bg-color: #FFFBE6; /* 奶油底色 */
+            --bg-pattern: #FFF3C4; /* 點點圖案色 */
+            --text-primary: #5D4037; /* 柔和的咖啡色文字，不要全黑 */
+            --text-secondary: #8D6E63;
+            
+            --chiikawa-pink: #FFCDD2; /* 吉伊臉頰粉 */
+            --hachiware-blue: #B3E5FC; /* 小八藍 */
+            --usagi-yellow: #FFF59D; /* 烏薩奇黃 */
+            --soft-green: #C8E6C9; /* 柔和綠 */
+            
+            --card-border: 3px solid #5D4037; /* 手繪感粗邊框 */
+            --shadow-color: rgba(93, 64, 55, 0.2);
+            --nav-height: 70px;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
-      background: #f5f5f5;
-      color: #2c3e50;
-      line-height: 1.6;
-      padding-bottom: 80px;
-      box-sizing: border-box;
-    }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'M PLUS Rounded 1c', "Microsoft JhengHei", sans-serif; /* 使用圓體 */
+            background-color: var(--bg-color);
+            /* 可愛背景點點圖案 */
+            background-image: radial-gradient(var(--bg-pattern) 20%, transparent 20%);
+            background-size: 20px 20px;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0 0 calc(var(--nav-height) + 20px) 0;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 100%;
-      margin: 0 auto;
-    }
+        /* Header: 像雲朵一樣 */
+        header {
+            background: #FFEBEE;
+            padding: 25px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            text-align: center;
+            border-bottom: var(--card-border);
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 4px 0 var(--shadow-color);
+        }
+        header h1 { 
+            font-size: 20px; margin: 0; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        header p { font-size: 13px; color: var(--text-secondary); margin-top: 8px; font-weight: bold; }
 
-    /* 頂部標題 */
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
+        /* Date Tabs: 像小糖果 */
+        .date-scroll {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 15px;
+            gap: 12px;
+            scrollbar-width: none;
+        }
+        .date-scroll::-webkit-scrollbar { display: none; }
+        
+        .date-chip {
+            background: #FFFFFF;
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--text-secondary);
+            border: 2px solid #FFE0B2;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0 #FFE0B2;
+        }
+        .date-chip.active {
+            background: var(--usagi-yellow); /* 選中變烏薩奇黃 */
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+            box-shadow: 2px 2px 0 var(--text-primary);
+            transform: translate(-1px, -1px);
+        }
 
-    .header h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
+        .container { padding: 0 18px; }
+        .page-section { display: none; animation: bounceIn 0.4s; }
+        .page-section.active { display: block; }
 
-    .header .trip-date {
-      font-size: 14px;
-      opacity: 0.95;
-    }
+        /* Weather Widget: 軟綿綿的對話框 */
+        .weather-widget {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--hachiware-blue);
+            padding: 15px 20px;
+            border-radius: 25px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border: 3px dashed #4FC3F7;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+        }
+        .weather-left { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .weather-icon-img { width: 35px; height: 35px; filter: drop-shadow(1px 1px 0 #fff); }
 
-    /* 標籤頁導航 */
-    .tabs {
-      position: sticky;
-      top: 0;
-      background: white;
-      display: flex;
-      border-bottom: 1px solid #e0e0e0;
-      z-index: 100;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
+        /* Cards: 手繪感卡片 */
+        .card {
+            background: #FFFFFF;
+            border-radius: 30px; /* 超圓潤 */
+            padding: 22px;
+            margin-bottom: 20px;
+            border: var(--card-border);
+            box-shadow: 4px 4px 0 var(--shadow-color); /* 卡通陰影 */
+            position: relative;
+            overflow: visible;
+        }
+        /* 偶爾讓卡片歪一點點，增加手繪感 */
+        .card:nth-child(even) { transform: rotate(0.5deg); }
+        .card:nth-child(odd) { transform: rotate(-0.5deg); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        
+        /* Tags: 小標籤 */
+        .tag { 
+            font-size: 11px; padding: 4px 10px; border-radius: 15px; font-weight: bold; 
+            border: 2px solid currentColor;
+            box-shadow: 1px 1px 0 currentColor;
+        }
+        .tag.spot { color: #558B2F; background: var(--soft-green); }
+        .tag.food { color: #C62828; background: var(--chiikawa-pink); }
+        .tag.transport { color: #1565C0; background: var(--hachiware-blue); }
+        .tag.must { color: #6D4C41; background: var(--usagi-yellow); border-color: #6D4C41; }
 
-    .tab {
-      flex: 1;
-      padding: 16px 8px;
-      text-align: center;
-      background: none;
-      border: none;
-      font-size: 14px;
-      color: #666;
-      cursor: pointer;
-      transition: all 0.3s;
-      border-bottom: 3px solid transparent;
-    }
+        .time { font-size: 13px; color: var(--text-secondary); font-weight: bold; }
+        .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; line-height: 1.4; }
+        .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 15px; font-weight: 500;}
+        
+        /* Guide Tip: 小八貓的提醒泡泡 */
+        .guide-tip {
+            background: #FFF9C4;
+            border: 3px dotted #FBC02D;
+            padding: 12px 15px;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            border-radius: 20px;
+            position: relative;
+        }
+        /* 加上一個小箭頭 */
+        .guide-tip::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            border-width: 0 10px 10px 10px;
+            border-style: solid;
+            border-color: transparent transparent #FBC02D transparent;
+        }
+        .guide-tip strong { color: #D84315; }
 
-    .tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
-      font-weight: 600;
-    }
+        /* Buttons: Ｑ彈按鈕 */
+        .actions { display: flex; gap: 12px; }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.1s;
+        }
+        .btn-nav { 
+            background: #FFAB91; /* 鮭魚粉 */
+            color: #fff; 
+            border: 3px solid #BF360C;
+            box-shadow: 3px 3px 0 #BF360C;
+            text-shadow: 1px 1px 0 #BF360C;
+        }
+        .btn-nav:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #BF360C;
+        }
 
-    .tab-content {
-      display: none;
-      padding: 16px;
-      animation: fadeIn 0.3s;
-    }
+        /* Tools & Bottom Nav */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-box { 
+            background: #FFFFFF; padding: 15px; border-radius: 25px; text-align: center; 
+            border: var(--card-border); box-shadow: 3px 3px 0 var(--shadow-color);
+        }
+        .info-box h3 { font-size: 15px; margin: 0 0 8px 0; color: #1565C0; }
+        .info-box p { font-size: 13px; margin: 0; color: var(--text-secondary); font-weight: bold; }
+        
+        .budget-card {
+            background: #FFF; border: var(--card-border); border-radius: 25px; padding: 20px;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+        }
+        .budget-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 2px dashed #eee; font-size: 15px; font-weight: bold;}
+        .budget-row:last-child { border-bottom: none; }
 
-    .tab-content.active {
-      display: block;
-    }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: #FFF3E0; /* 柔和橘 */
+            border-top: var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -3px 0 var(--shadow-color);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-secondary); cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .nav-item.active { color: var(--text-primary); transform: scale(1.1); }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+        /* 彈跳動畫 */
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            70% { transform: scale(1.02) translateY(-2px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body>
 
-    /* 日期卡片 */
-    .day-card {
-      background: white;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
+<header>
+    <h1>(๑•̀ㅂ•́)و✧ 台北大冒險</h1>
+    <p>2025.12.04 - 12.08 ・ 體育交流</p>
+</header>
 
-    .day-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .day-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .weather-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      background: rgba(255, 255, 255, 0.2);
-      padding: 6px 12px;
-      border-radius: 20px;
-    }
-
-    .weather-loading {
-      opacity: 0.7;
-    }
-
-    .day-content {
-      padding: 16px;
-    }
-
-    /* 行程項目卡片 */
-    .item-card {
-      background: #fafafa;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 12px;
-      border-left: 4px solid #667eea;
-    }
-
-    .item-card.flight {
-      border-left-color: #e74c3c;
-      background: #fff5f5;
-    }
-
-    .item-card.restaurant {
-      border-left-color: #f39c12;
-      background: #fffaf0;
-    }
-
-    .item-card.transport {
-      border-left-color: #3498db;
-      background: #f0f8ff;
-    }
-
-    .item-card.attraction {
-      border-left-color: #2ecc71;
-      background: #f0fff4;
-    }
-
-    .item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .item-type {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .item-type.flight {
-      background: #e74c3c;
-      color: white;
-    }
-
-    .item-type.restaurant {
-      background: #f39c12;
-      color: white;
-    }
-
-    .item-type.attraction {
-      background: #2ecc71;
-      color: white;
-    }
-
-    .item-type.transport {
-      background: #3498db;
-      color: white;
-    }
-
-    .item-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 8px;
-    }
-
-    .item-details {
-      font-size: 14px;
-      color: #555;
-      line-height: 1.8;
-    }
-
-    /* 標籤 */
-    .highlight-tag {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      margin: 4px 4px 4px 0;
-    }
-
-    .tag-must-eat {
-      background: #ffe4e1;
-      color: #e74c3c;
-    }
-
-    .tag-must-buy {
-      background: #fff4e6;
-      color: #f39c12;
-    }
-
-    .tag-important {
-      background: #e8f5e9;
-      color: #2ecc71;
-    }
-
-    .tag-tips {
-      background: #e3f2fd;
-      color: #3498db;
-    }
-
-    /* 導航按鈕 */
-    .nav-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-top: 8px;
-    }
-
-    .nav-button:hover {
-      background: #5568d3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-    }
-
-    /* 資訊卡片 */
-    .info-section {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .info-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #667eea;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .info-row:last-child {
-      border-bottom: none;
-    }
-
-    .info-label {
-      font-weight: 600;
-      color: #555;
-      font-size: 14px;
-    }
-
-    .info-value {
-      color: #2c3e50;
-      text-align: right;
-      font-size: 14px;
-    }
-
-    /* 預算表 */
-    .budget-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: #fafafa;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
-
-    .budget-category {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 14px;
-    }
-
-    .budget-amount {
-      font-size: 16px;
-      font-weight: 700;
-      color: #667eea;
-    }
-
-    .budget-total {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 16px;
-      border-radius: 10px;
-      text-align: center;
-      margin-top: 12px;
-    }
-
-    .budget-total-label {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 4px;
-    }
-
-    .budget-total-amount {
-      font-size: 28px;
-      font-weight: 700;
-    }
-
-    /* 餐食資訊 */
-    .meal-info {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed #e0e0e0;
-    }
-
-    .meal-badge {
-      padding: 6px 12px;
-      border-radius: 16px;
-      font-size: 13px;
-      background: #f0f0f0;
-      color: #555;
-    }
-
-    /* 住宿資訊 */
-    .hotel-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      background: #e3f2fd;
-      color: #1976d2;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-top: 8px;
-    }
-  </style>
-  <style>@view-transition { navigation: auto; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
- </head>
- <body>
-  <div class="container">
-   <div class="header">
-    <h1 id="trip-title">台北行程 ver2.0</h1>
-    <div class="trip-date">
-     2025年12月4日 - 12月8日
+<div id="view-itinerary" class="page-view active">
+    <div class="date-scroll">
+        <div class="date-chip active" onclick="switchDay(1)">D1・12/04</div>
+        <div class="date-chip" onclick="switchDay(2)">D2・12/05</div>
+        <div class="date-chip" onclick="switchDay(3)">D3・12/06</div>
+        <div class="date-chip" onclick="switchDay(4)">D4・12/07</div>
+        <div class="date-chip" onclick="switchDay(5)">D5・12/08</div>
     </div>
-   </div>
-   <div class="tabs"><button class="tab active" onclick="switchTab('itinerary')">📅 行程</button> <button class="tab" onclick="switchTab('flight')">✈️ 航班</button> <button class="tab" onclick="switchTab('hotel')">🏨 住宿</button> <button class="tab" onclick="switchTab('budget')">💰 預算</button>
-   </div>
-   <div id="itinerary" class="tab-content active"><!-- DAY 1 -->
-    <div class="day-card">
-     <div class="day-header">
-      <div class="day-title">
-       DAY 1 - 12月4日
-      </div>
-      <div class="weather-info weather-loading">
-       載入中...
-      </div>
-     </div>
-     <div class="day-content">
-      <div class="item-card flight">
-       <div class="item-header"><span class="item-type flight">✈️ 航班</span>
-       </div>
-       <div class="item-title">
-        CX564 香港 → 台北桃園
-       </div>
-       <div class="item-details">
-        <div>
-         🛫 起飛：08:30 香港國際機場
+
+    <div class="container">
+        <div id="day-1" class="page-section active">
+            <div class="weather-widget" id="weather-1" data-city="Taoyuan">
+                <span class="weather-left">📍 讀取天氣中... (・ω・)</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag transport">✈️ 航班</span>
+                    <span class="time">08:30 - 10:15</span>
+                </div>
+                <div class="title">出發囉！國泰航空 CX564</div>
+                <div class="desc">香港 HKG → 台北桃園 TPE。要記得帶護照喔！</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🏫 交流</span>
+                    <span class="time">下午</span>
+                </div>
+                <div class="title">國立體育大學 (NTSU)</div>
+                <div class="desc">球隊報到。注意：有專車接送，不可以自己亂跑喔！</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=國立體育大學" target="_blank" class="btn btn-nav">🚗 咻～導航去</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag transport">🏨 住宿</span>
+                    <span class="time">Check-in</span>
+                </div>
+                <div class="title">台北悅徠舘 Joyfultel</div>
+                <div class="desc">在林口喔！離 Outlet 很近，可以去逛街～</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=台北悅徠舘" target="_blank" class="btn btn-nav">🏠 回飯店休息</a>
+                </div>
+            </div>
         </div>
-        <div>
-         🛬 抵達：10:15 桃園國際機場
-        </div><span class="highlight-tag tag-important">重要航班資訊</span>
-       </div>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">📍 景點</span>
-       </div>
-       <div class="item-title">
-        桃園台灣體育大學 NTSU
-       </div>
-       <div class="item-details">
-        <div>
-         📝 登記報到（客人自行安排）
+
+        <div id="day-2" class="page-section">
+            <div class="weather-widget" id="weather-2" data-city="Taoyuan">
+                <span class="weather-left">📍 讀取天氣中... (・ω・)</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🏀 交流</span>
+                    <span class="time">全日</span>
+                </div>
+                <div class="title">體育大學 NTSU 比賽</div>
+                <div class="desc">一整天的比賽！加油加油！(ง๑ •̀_•́)ง</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=國立體育大學" target="_blank" class="btn btn-nav">🚗 導航去比賽</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag food">🍜 晚餐</span>
+                    <span class="time">晚上</span>
+                </div>
+                <div class="title">桃園觀光夜市</div>
+                <div class="desc">好多好吃的！是桃園最老的夜市。</div>
+                <div class="guide-tip">
+                    <span class="tag must">小八推薦</span> 肚子餓了嗎？試試看<strong>嘉義順蚵仔煎</strong>、<strong>黑人鼎邊趖</strong>，還有<strong>吳記大腸包小腸</strong>！真的很好吃喔～
+                </div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=桃園觀光夜市" target="_blank" class="btn btn-nav">😋 導航去吃好料</a>
+                </div>
+            </div>
         </div>
-        <div>
-         🚗 專車接送服務
-        </div><span class="highlight-tag tag-tips">💡 交流考察限新北市、台北市、桃園市</span> <span class="highlight-tag tag-important">⏰ 每日用車10小時</span>
-       </div><button class="nav-button" onclick="navigate('桃園台灣體育大學')">🧭 開始導航</button>
-      </div>
-      <div class="item-card transport">
-       <div class="item-header"><span class="item-type transport">🚗 交通</span>
-       </div>
-       <div class="item-title">
-        送返酒店
-       </div>
-       <div class="item-details">
-        專車接送至台北悅徠舘
-       </div>
-      </div>
-      <div class="meal-info"><span class="meal-badge">早餐 ~~~</span> <span class="meal-badge">午餐自理</span> <span class="meal-badge">晚餐自理</span>
-      </div>
-      <div class="hotel-badge">
-       🏨 台北悅徠舘 Joyfultel - 林口飯店
-      </div>
-     </div>
-    </div><!-- DAY 2 -->
-    <div class="day-card">
-     <div class="day-header">
-      <div class="day-title">
-       DAY 2 - 12月5日
-      </div>
-      <div class="weather-info weather-loading">
-       載入中...
-      </div>
-     </div>
-     <div class="day-content">
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">📍 活動</span>
-       </div>
-       <div class="item-title">
-        桃園台灣體育大學 NTSU
-       </div>
-       <div class="item-details">
-        <div>
-         🏃 全日交流比賽
-        </div><span class="highlight-tag tag-important">全天活動</span>
-       </div><button class="nav-button" onclick="navigate('桃園台灣體育大學')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🎪 景點</span>
-       </div>
-       <div class="item-title">
-        桃園觀光夜市
-       </div>
-       <div class="item-details">
-        <div>
-         🌃 台灣最道地的夜市文化體驗
-        </div><span class="highlight-tag tag-must-eat">🍴 必吃：大腸包小腸、蚵仔煎、臭豆腐</span> <span class="highlight-tag tag-must-buy">🛍️ 必買：手工餅乾、珍珠奶茶</span> <span class="highlight-tag tag-tips">💡 建議停留2-3小時</span>
-       </div><button class="nav-button" onclick="navigate('桃園觀光夜市')">🧭 開始導航</button>
-      </div>
-      <div class="meal-info"><span class="meal-badge">早餐（酒店）</span> <span class="meal-badge">午餐自理</span> <span class="meal-badge">晚餐自理於夜市</span>
-      </div>
-      <div class="hotel-badge">
-       🏨 台北悅徠舘 Joyfultel - 林口飯店
-      </div>
-     </div>
-    </div><!-- DAY 3 -->
-    <div class="day-card">
-     <div class="day-header">
-      <div class="day-title">
-       DAY 3 - 12月6日
-      </div>
-      <div class="weather-info weather-loading">
-       載入中...
-      </div>
-     </div>
-     <div class="day-content">
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">📍 活動</span>
-       </div>
-       <div class="item-title">
-        桃園台灣體育大學 NTSU
-       </div>
-       <div class="item-details">
-        <div>
-         🏃 全日交流比賽
-        </div><span class="highlight-tag tag-important">全天活動</span>
-       </div><button class="nav-button" onclick="navigate('桃園台灣體育大學')">🧭 開始導航</button>
-      </div>
-      <div class="item-card restaurant">
-       <div class="item-header"><span class="item-type restaurant">🍽️ 餐廳</span>
-       </div>
-       <div class="item-title">
-        饗饗新莊店（自助餐）
-       </div>
-       <div class="item-details">
-        <div>
-         🌟 台灣人氣自助餐廳
-        </div><span class="highlight-tag tag-must-eat">🍴 必吃：現煮牛排、生魚片、甜點吧</span> <span class="highlight-tag tag-tips">💡 建議提前訂位</span>
-       </div><button class="nav-button" onclick="navigate('饗饗新莊店')">🧭 開始導航</button>
-      </div>
-      <div class="meal-info"><span class="meal-badge">早餐（酒店）</span> <span class="meal-badge">午餐自理</span> <span class="meal-badge">晚餐自理於饗饗</span>
-      </div>
-      <div class="hotel-badge">
-       🏨 台北悅徠舘 Joyfultel - 林口飯店
-      </div>
-     </div>
-    </div><!-- DAY 4 -->
-    <div class="day-card">
-     <div class="day-header">
-      <div class="day-title">
-       DAY 4 - 12月7日
-      </div>
-      <div class="weather-info weather-loading">
-       載入中...
-      </div>
-     </div>
-     <div class="day-content">
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">📍 活動</span>
-       </div>
-       <div class="item-title">
-        桃園台灣體育大學 NTSU
-       </div>
-       <div class="item-details">
-        <div>
-         🏃 交流比賽
+
+        <div id="day-3" class="page-section">
+            <div class="weather-widget" id="weather-3" data-city="Taipei">
+                <span class="weather-left">📍 讀取天氣中... (・ω・)</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🏀 交流</span>
+                    <span class="time">全日</span>
+                </div>
+                <div class="title">體育大學 NTSU 比賽</div>
+                <div class="desc">第二天比賽也要加油！</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=國立體育大學" target="_blank" class="btn btn-nav">🚗 導航</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag food">🍽️ 晚餐</span>
+                    <span class="time">預約制</span>
+                </div>
+                <div class="title">饗饗 INPARADISE (新莊店)</div>
+                <div class="desc">在 39 樓的高空吃 Buffet！風景超級好！✨</div>
+                <div class="guide-tip">
+                    <span class="tag must">重要提醒</span> 這裡超級熱門！一定要確認有拿到<strong>預約代號</strong>喔！不可以忘記拿<strong>鐵板干貝</strong>和<strong>炙燒握壽司</strong>！
+                </div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=饗饗新莊店" target="_blank" class="btn btn-nav">🚗 導航去吃大餐</a>
+                </div>
+            </div>
         </div>
-       </div><button class="nav-button" onclick="navigate('桃園台灣體育大學')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🏛️ 景點</span>
-       </div>
-       <div class="item-title">
-        新富町文化市場
-       </div>
-       <div class="item-details">
-        <div>
-         🏛️ 日治時期馬蹄形市場建築
-        </div><span class="highlight-tag tag-tips">💡 IG打卡熱點</span> <span class="highlight-tag tag-important">免費參觀</span>
-       </div><button class="nav-button" onclick="navigate('新富町文化市場')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🛍️ 景點</span>
-       </div>
-       <div class="item-title">
-        大稻埕商圈
-       </div>
-       <div class="item-details">
-        <div>
-         🏮 台北歷史街區與復古文創聚落
-        </div><span class="highlight-tag tag-must-buy">🛍️ 必買：花布、南北貨、文創小物</span> <span class="highlight-tag tag-must-eat">🍴 必吃：古早味糕餅</span>
-       </div><button class="nav-button" onclick="navigate('大稻埕商圈')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🌊 景點</span>
-       </div>
-       <div class="item-title">
-        大稻埕碼頭
-       </div>
-       <div class="item-details">
-        <div>
-         🚢 淡水河畔散步與夕陽美景
-        </div><span class="highlight-tag tag-tips">💡 傍晚時分最美</span>
-       </div><button class="nav-button" onclick="navigate('大稻埕碼頭')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🎨 景點</span>
-       </div>
-       <div class="item-title">
-        四四南村簡單市集
-       </div>
-       <div class="item-details">
-        <div>
-         🏘️ 眷村文化與文創市集
-        </div><span class="highlight-tag tag-must-buy">🛍️ 必逛：手作文創、復古小物</span> <span class="highlight-tag tag-tips">💡 假日限定市集</span>
-       </div><button class="nav-button" onclick="navigate('四四南村')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🎁 景點</span>
-       </div>
-       <div class="item-title">
-        cookie886伴手禮
-       </div>
-       <div class="item-details">
-        <div>
-         🍪 台灣人氣手工餅乾專賣店
-        </div><span class="highlight-tag tag-must-buy">🛍️ 必買：手工餅乾禮盒、鳳梨酥</span>
-       </div><button class="nav-button" onclick="navigate('cookie886')">🧭 開始導航</button>
-      </div>
-      <div class="item-card restaurant">
-       <div class="item-header"><span class="item-type restaurant">🍽️ 餐廳</span>
-       </div>
-       <div class="item-title">
-        鼎王忠孝店（火鍋）
-       </div>
-       <div class="item-details">
-        <div>
-         🔥 台灣知名麻辣火鍋連鎖
-        </div><span class="highlight-tag tag-must-eat">🍴 必點：鼎王招牌湯底、手工丸子</span> <span class="highlight-tag tag-tips">💡 建議提前訂位</span>
-       </div><button class="nav-button" onclick="navigate('鼎王忠孝店')">🧭 開始導航</button>
-      </div>
-      <div class="meal-info"><span class="meal-badge">早餐（酒店）</span> <span class="meal-badge">午餐自理</span> <span class="meal-badge">晚餐自理於鼎王</span>
-      </div>
-      <div class="hotel-badge">
-       🏨 台北悅徠舘 Joyfultel - 林口飯店
-      </div>
-     </div>
-    </div><!-- DAY 5 -->
-    <div class="day-card">
-     <div class="day-header">
-      <div class="day-title">
-       DAY 5 - 12月8日
-      </div>
-      <div class="weather-info weather-loading">
-       載入中...
-      </div>
-     </div>
-     <div class="day-content">
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">⛩️ 景點</span>
-       </div>
-       <div class="item-title">
-        桃園忠烈祠暨神社文化園區
-       </div>
-       <div class="item-details">
-        <div>
-         ⛩️ 日式神社建築與莊嚴氛圍
-        </div><span class="highlight-tag tag-tips">💡 IG打卡聖地</span> <span class="highlight-tag tag-important">免費參觀</span>
-       </div><button class="nav-button" onclick="navigate('桃園忠烈祠')">🧭 開始導航</button>
-      </div>
-      <div class="item-card attraction">
-       <div class="item-header"><span class="item-type attraction">🛍️ 景點</span>
-       </div>
-       <div class="item-title">
-        華泰名品城 Outlet
-       </div>
-       <div class="item-details">
-        <div>
-         🛒 桃園最大美式露天購物城
-        </div><span class="highlight-tag tag-must-buy">🛍️ 必逛：國際精品、運動品牌</span> <span class="highlight-tag tag-tips">💡 離機場近，最後採購好時機</span>
-       </div><button class="nav-button" onclick="navigate('華泰名品城')">🧭 開始導航</button>
-      </div>
-      <div class="item-card flight">
-       <div class="item-header"><span class="item-type flight">✈️ 航班</span>
-       </div>
-       <div class="item-title">
-        CX473 台北桃園 → 香港
-       </div>
-       <div class="item-details">
-        <div>
-         🛫 起飛：18:35 桃園國際機場
+
+        <div id="day-4" class="page-section">
+            <div class="weather-widget" id="weather-4" data-city="Taipei">
+                <span class="weather-left">📍 讀取天氣中... (・ω・)</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🏮 景點</span>
+                    <span class="time">上午</span>
+                </div>
+                <div class="title">新富町文化市場 & 大稻埕</div>
+                <div class="desc">去看看很有特色的U型市場，還有復古的老街。</div>
+                <div class="guide-tip">
+                    <span class="tag must">烏薩奇攻略</span> 迪化街可以買茶葉！還有還有，去「霞海城隍廟」拜拜會很幸運喔！哈！
+                </div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=新富町文化市場" target="_blank" class="btn btn-nav">🚗 新富町</a>
+                    <a href="https://www.google.com/maps/search/?api=1&query=大稻埕" target="_blank" class="btn btn-nav">🚗 大稻埕</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🛍️ 景點</span>
+                    <span class="time">下午</span>
+                </div>
+                <div class="title">四四南村 & Cookie886</div>
+                <div class="desc">以前的眷村變成文創園區了，旁邊有好吃的餅乾店。</div>
+                <div class="guide-tip">
+                    <span class="tag must">必買伴手禮</span> 大家都說 <strong>Cookie886</strong> 是全台灣最好吃的曲奇餅乾！(嚼嚼) 最好先預訂喔～
+                </div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Cookie886" target="_blank" class="btn btn-nav">🍪 導航去買餅乾</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag food">🍲 晚餐</span>
+                    <span class="time">晚上</span>
+                </div>
+                <div class="title">鼎王麻辣鍋 (忠孝店)</div>
+                <div class="desc">是經典的麻辣鍋！鴨血和豆腐可以一直吃一直吃～</div>
+                <div class="guide-tip">
+                    <span class="tag must">必點</span> 麵包豆腐和老油條！吸滿湯汁超級好吃！(流口水)
+                </div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=鼎王麻辣鍋忠孝店" target="_blank" class="btn btn-nav">🌶️ 導航去吃鍋</a>
+                </div>
+            </div>
         </div>
-        <div>
-         🛬 抵達：20:40 香港國際機場
-        </div><span class="highlight-tag tag-important">重要航班資訊</span> <span class="highlight-tag tag-tips">💡 建議提前3小時抵達機場</span>
-       </div>
-      </div>
-      <div class="meal-info"><span class="meal-badge">早餐（酒店）</span> <span class="meal-badge">午餐自理</span> <span class="meal-badge">晚餐 ~~~</span>
-      </div>
-      <div class="hotel-badge">
-       🏠 溫暖的家
-      </div>
-     </div>
+
+        <div id="day-5" class="page-section">
+            <div class="weather-widget" id="weather-5" data-city="Taoyuan">
+                <span class="weather-left">📍 讀取天氣中... (・ω・)</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">⛩️ 景點</span>
+                    <span class="time">上午</span>
+                </div>
+                <div class="title">桃園忠烈祠暨神社文化園區</div>
+                <div class="desc">很漂亮的日式神社喔，保存得很完整。</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=桃園神社" target="_blank" class="btn btn-nav">🚗 導航拍照去</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag spot">🛍️ 購物</span>
+                    <span class="time">下午</span>
+                </div>
+                <div class="title">華泰名品城 Outlet</div>
+                <div class="desc">最後的購物時間！是露天的 Outlet，在高鐵站旁邊。</div>
+                <div class="actions">
+                    <a href="https://www.google.com/maps/search/?api=1&query=華泰名品城" target="_blank" class="btn btn-nav">💸 導航去血拼</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="tag transport">✈️ 航班</span>
+                    <span class="time">18:35 - 20:40</span>
+                </div>
+                <div class="title">回家囉！國泰航空 CX473</div>
+                <div class="desc">台北桃園 TPE → 香港 HKG。回溫暖的家～ (´▽`ʃ♡ƪ)</div>
+            </div>
+        </div>
     </div>
-   </div>
-   <div id="flight" class="tab-content">
-    <div class="info-section">
-     <div class="info-title">
-      ✈️ 航班資訊
-     </div>
-     <div class="info-row"><span class="info-label">去程航班</span> <span class="info-value">CX564</span>
-     </div>
-     <div class="info-row"><span class="info-label">起飛時間</span> <span class="info-value">12月4日 08:30</span>
-     </div>
-     <div class="info-row"><span class="info-label">起飛地點</span> <span class="info-value">香港國際機場</span>
-     </div>
-     <div class="info-row"><span class="info-label">抵達時間</span> <span class="info-value">12月4日 10:15</span>
-     </div>
-     <div class="info-row"><span class="info-label">抵達地點</span> <span class="info-value">台北桃園國際機場</span>
-     </div>
+</div>
+
+<div id="view-tools" class="page-view" style="display:none;">
+    <div class="container" style="padding-top: 20px;">
+        
+        <h2 style="font-size:18px; margin-bottom:15px; text-align:center;">📋 小本本資訊</h2>
+        
+        <div class="info-grid">
+            <div class="info-box">
+                <h3>✈️ 航班</h3>
+                <p>去: CX564 (08:30)</p>
+                <p>返: CX473 (18:35)</p>
+            </div>
+            <div class="info-box">
+                <h3>🏨 住宿</h3>
+                <p>台北悅徠舘</p>
+                <p>Joyfultel Linkou</p>
+            </div>
+            <div class="info-box">
+                <h3>🆘 緊急</h3>
+                <p>報警: 110</p>
+                <p>救護: 119</p>
+            </div>
+            <div class="info-box">
+                <h3>🚩 旅行社</h3>
+                <p>星晨 MorningStar</p>
+                <p>牌照: 352614</p>
+            </div>
+        </div>
+
+        <h2 style="font-size:18px; margin: 25px 0 15px 0; text-align:center;">💰 錢錢紀錄表</h2>
+        <div class="budget-card">
+            <div class="budget-row">
+                <span>總預算</span>
+                <span contenteditable="true" style="color:var(--soft-green)">NT$ 20,000</span>
+            </div>
+            <div class="budget-row">
+                <span>Day 1 花費</span>
+                <span contenteditable="true">NT$ 0</span>
+            </div>
+            <div class="budget-row">
+                <span>Day 2 花費</span>
+                <span contenteditable="true">NT$ 0</span>
+            </div>
+            <div class="budget-row">
+                <span>Day 3 花費</span>
+                <span contenteditable="true">NT$ 0</span>
+            </div>
+            <div class="budget-row">
+                <span>Day 4 花費</span>
+                <span contenteditable="true">NT$ 0</span>
+            </div>
+            <div class="budget-row">
+                <span>Day 5 花費</span>
+                <span contenteditable="true">NT$ 0</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:10px; text-align:center; font-weight:bold;">*點數字可以直接修改喔！(・∀・)</div>
+        </div>
+
     </div>
-    <div class="info-section">
-     <div class="info-title">
-      ✈️ 回程航班資訊
-     </div>
-     <div class="info-row"><span class="info-label">回程航班</span> <span class="info-value">CX473</span>
-     </div>
-     <div class="info-row"><span class="info-label">起飛時間</span> <span class="info-value">12月8日 18:35</span>
-     </div>
-     <div class="info-row"><span class="info-label">起飛地點</span> <span class="info-value">台北桃園國際機場</span>
-     </div>
-     <div class="info-row"><span class="info-label">抵達時間</span> <span class="info-value">12月8日 20:40</span>
-     </div>
-     <div class="info-row"><span class="info-label">抵達地點</span> <span class="info-value">香港國際機場</span>
-     </div>
+</div>
+
+<div class="bottom-nav">
+    <div class="nav-item active" onclick="switchView('itinerary', this)">
+        <div class="nav-icon">🗺️</div>
+        <div>行程表</div>
     </div>
-    <div class="info-section">
-     <div class="info-title">
-      📞 緊急聯絡資訊
-     </div>
-     <div class="info-row"><span class="info-label" id="agency-label">旅行社</span> <span class="info-value" id="agency-name">星晨旅遊（MorningStar）</span>
-     </div>
-     <div class="info-row"><span class="info-label">牌照號碼</span> <span class="info-value">352614</span>
-     </div>
-     <div class="info-row"><span class="info-label">地址</span> <span class="info-value">九龍紅磡鶴翔街1號<br>
-       維港中心第1座6樓606-2室</span>
-     </div>
-     <div class="info-row"><span class="info-label">網站</span> <span class="info-value">www.morningstartravel.com.hk</span>
-     </div>
-     <div class="info-row"><span class="info-label">緊急電話</span> <span class="info-value" id="contact-phone">請向旅行社索取</span>
-     </div>
+    <div class="nav-item" onclick="switchView('tools', this)">
+        <div class="nav-icon">🎒</div>
+        <div>百寶袋</div>
     </div>
-   </div>
-   <div id="hotel" class="tab-content">
-    <div class="info-section">
-     <div class="info-title">
-      🏨 住宿資訊
-     </div>
-     <div class="info-row"><span class="info-label">酒店名稱</span> <span class="info-value">台北悅徠舘 Joyfultel<br>
-       林口飯店</span>
-     </div>
-     <div class="info-row"><span class="info-label">入住日期</span> <span class="info-value">12月4日 - 12月7日</span>
-     </div>
-     <div class="info-row"><span class="info-label">住宿天數</span> <span class="info-value">4晚</span>
-     </div>
-     <div class="info-row"><span class="info-label">包含早餐</span> <span class="info-value">✅ 是</span>
-     </div><button class="nav-button" onclick="navigate('台北悅徠舘林口飯店')" style="width: 100%; justify-content: center; margin-top: 16px;"> 🧭 導航至酒店 </button>
-    </div>
-    <div class="info-section">
-     <div class="info-title">
-      ℹ️ 住宿須知
-     </div>
-     <div class="item-details" style="line-height: 2;">
-      <div>
-       ✓ 早餐時間通常為 06:30-10:00
-      </div>
-      <div>
-       ✓ 退房時間為中午12:00前
-      </div>
-      <div>
-       ✓ 酒店提供免費WiFi
-      </div>
-      <div>
-       ✓ 如需延遲退房請提前告知櫃檯
-      </div>
-     </div>
-    </div>
-   </div>
-   <div id="budget" class="tab-content">
-    <div class="info-section">
-     <div class="info-title">
-      💰 預算規劃
-     </div>
-     <div class="budget-item"><span class="budget-category">📦 團費</span> <span class="budget-amount">待確認</span>
-     </div>
-     <div class="budget-item"><span class="budget-category">🍽️ 餐飲費用</span> <span class="budget-amount">HK$ 1,500</span>
-     </div>
-     <div class="budget-item"><span class="budget-category">🛍️ 購物預算</span> <span class="budget-amount">HK$ 2,000</span>
-     </div>
-     <div class="budget-item"><span class="budget-category">🎫 門票雜費</span> <span class="budget-amount">HK$ 500</span>
-     </div>
-     <div class="budget-item"><span class="budget-category">🚗 額外交通</span> <span class="budget-amount">HK$ 400</span>
-     </div>
-     <div class="budget-total">
-      <div class="budget-total-label">
-       預估總支出
-      </div>
-      <div class="budget-total-amount">
-       HK$ 4,400+
-      </div>
-     </div>
-    </div>
-    <div class="info-section">
-     <div class="info-title">
-      💡 省錢小貼士
-     </div>
-     <div class="item-details" style="line-height: 2;"><span class="highlight-tag tag-tips">💡 夜市用餐較經濟實惠</span> <span class="highlight-tag tag-tips">💡 便利商店購買飲料零食</span> <span class="highlight-tag tag-tips">💡 Outlet購物記得帶護照享折扣</span> <span class="highlight-tag tag-important">⚠️ 超時用車每小時HK$400</span>
-     </div>
-    </div>
-    <div class="info-section">
-     <div class="info-title">
-      📝 記帳區域
-     </div>
-     <div class="item-details"><textarea id="expense-notes" placeholder="記錄您的實際支出..." style="width: 100%; min-height: 150px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
-     </div>
-    </div>
-   </div>
-  </div>
-  <script>
-    const defaultConfig = {
-      trip_title: "台北行程 ver2.0",
-      agency_name: "星晨旅遊（MorningStar）",
-      contact_phone: "請向旅行社索取"
+</div>
+
+<script>
+    const API_KEY = '63966c4126824d4c4dd15602ce663d8c';
+    const locations = {
+        'Taoyuan': { lat: 24.993, lon: 121.301, name: '桃園' },
+        'Taipei':  { lat: 25.033, lon: 121.565, name: '台北' }
     };
 
-    let config = { ...defaultConfig };
-
-    // 天氣 API 配置
-    const WEATHER_API_KEY = '63966c4126824d4c4dd15602ce663d8c';
-    const TAIPEI_LAT = 25.0330;
-    const TAIPEI_LON = 121.5654;
-
-    // 天氣圖示對應
-    function getWeatherIcon(weatherCode) {
-      const weatherIcons = {
-        '01d': '☀️', '01n': '🌙',
-        '02d': '🌤️', '02n': '☁️',
-        '03d': '☁️', '03n': '☁️',
-        '04d': '☁️', '04n': '☁️',
-        '09d': '🌧️', '09n': '🌧️',
-        '10d': '🌦️', '10n': '🌧️',
-        '11d': '⛈️', '11n': '⛈️',
-        '13d': '❄️', '13n': '❄️',
-        '50d': '🌫️', '50n': '🌫️'
-      };
-      return weatherIcons[weatherCode] || '🌤️';
+    async function fetchWeather() {
+        await getWeatherForCity('Taoyuan', [1, 2, 5]);
+        await getWeatherForCity('Taipei', [3, 4]);
     }
 
-    // 獲取天氣資料
-    async function fetchWeatherData() {
-      try {
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?lat=${TAIPEI_LAT}&lon=${TAIPEI_LON}&appid=${WEATHER_API_KEY}&units=metric&lang=zh_tw`
-        );
-        
-        if (!response.ok) {
-          throw new Error('天氣資料載入失敗');
-        }
-        
-        const data = await response.json();
-        updateWeatherDisplay(data);
-      } catch (error) {
-        console.error('天氣 API 錯誤:', error);
-        useDefaultWeather();
-      }
-    }
+    async function getWeatherForCity(cityKey, dayIds) {
+        const loc = locations[cityKey];
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${loc.lat}&lon=${loc.lon}&units=metric&lang=zh_tw&appid=${API_KEY}`;
 
-    // 更新天氣顯示
-    function updateWeatherDisplay(weatherData) {
-      const dayCards = document.querySelectorAll('.day-card');
-      
-      dayCards.forEach((card, index) => {
-        if (weatherData.list && weatherData.list.length > 0) {
-          const dayForecast = weatherData.list[Math.min(index * 8 + 4, weatherData.list.length - 1)];
-          
-          if (dayForecast) {
-            const temp = Math.round(dayForecast.main.temp);
-            const weatherIcon = getWeatherIcon(dayForecast.weather[0].icon);
-            const weatherDesc = dayForecast.weather[0].description;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
             
-            const weatherInfo = card.querySelector('.weather-info');
-            if (weatherInfo) {
-              weatherInfo.innerHTML = `${weatherIcon} ${temp}°C`;
-              weatherInfo.title = weatherDesc;
-              weatherInfo.classList.remove('weather-loading');
+            if (data.weather) {
+                const temp = Math.round(data.main.temp);
+                const desc = data.weather[0].description;
+                const icon = data.weather[0].icon;
+                const iconUrl = `https://openweathermap.org/img/wn/${icon}.png`;
+
+                dayIds.forEach(id => {
+                    const widget = document.getElementById(`weather-${id}`);
+                    if (widget) {
+                        widget.innerHTML = `
+                            <div class="weather-left">
+                                <span>📍 ${loc.name}</span>
+                                <img src="${iconUrl}" class="weather-icon-img" alt="icon">
+                                <span style="font-size:16px;">${temp}°C</span>
+                            </div>
+                            <span>${desc} (即時)</span>
+                        `;
+                    }
+                });
             }
-          }
+        } catch (error) {
+            dayIds.forEach(id => {
+                const widget = document.getElementById(`weather-${id}`);
+                if(widget) widget.innerHTML = `<span>(T_T) 嗚...天氣讀取失敗</span>`;
+            });
         }
-      });
     }
 
-    // 使用預設天氣（API 失敗時）
-    function useDefaultWeather() {
-      const defaultWeathers = ['☀️ 20°C', '🌤️ 22°C', '☁️ 21°C', '🌤️ 23°C', '☀️ 24°C'];
-      const dayCards = document.querySelectorAll('.day-card');
-      
-      dayCards.forEach((card, index) => {
-        const weatherInfo = card.querySelector('.weather-info');
-        if (weatherInfo && index < defaultWeathers.length) {
-          weatherInfo.innerHTML = defaultWeathers[index];
-          weatherInfo.classList.remove('weather-loading');
+    function switchDay(dayNum) {
+        document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('day-' + dayNum).classList.add('active');
+        document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.date-chip')[dayNum-1].classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchView(viewName, navEl) {
+        if(viewName === 'itinerary') {
+            document.getElementById('view-itinerary').style.display = 'block';
+            document.getElementById('view-tools').style.display = 'none';
+        } else {
+            document.getElementById('view-itinerary').style.display = 'none';
+            document.getElementById('view-tools').style.display = 'block';
         }
-      });
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        navEl.classList.add('active');
     }
 
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
-      event.target.classList.add('active');
-      document.getElementById(tabName).classList.add('active');
-    }
+    window.onload = function() {
+        fetchWeather();
+    };
+</script>
 
-    function navigate(destination) {
-      const encodedDestination = encodeURIComponent(destination);
-      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedDestination}`;
-      window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
-    }
-
-    async function onConfigChange(newConfig) {
-      config = { ...config, ...newConfig };
-      
-      const tripTitleElement = document.getElementById('trip-title');
-      if (tripTitleElement) {
-        tripTitleElement.textContent = config.trip_title || defaultConfig.trip_title;
-      }
-
-      const agencyNameElement = document.getElementById('agency-name');
-      if (agencyNameElement) {
-        agencyNameElement.textContent = config.agency_name || defaultConfig.agency_name;
-      }
-
-      const contactPhoneElement = document.getElementById('contact-phone');
-      if (contactPhoneElement) {
-        contactPhoneElement.textContent = config.contact_phone || defaultConfig.contact_phone;
-      }
-    }
-
-    // 頁面載入時獲取天氣資料
-    window.addEventListener('load', () => {
-      fetchWeatherData();
-    });
-
-    if (window.elementSdk) {
-      window.elementSdk.init({
-        defaultConfig: defaultConfig,
-        onConfigChange: onConfigChange,
-        mapToCapabilities: (config) => ({
-          recolorables: [],
-          borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        }),
-        mapToEditPanelValues: (config) => new Map([
-          ["trip_title", config.trip_title || defaultConfig.trip_title],
-          ["agency_name", config.agency_name || defaultConfig.agency_name],
-          ["contact_phone", config.contact_phone || defaultConfig.contact_phone]
-        ])
-      });
-    }
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a40fba8e178ddc0',t:'MTc2NDA3MTk5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
